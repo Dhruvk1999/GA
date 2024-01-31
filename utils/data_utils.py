@@ -1,6 +1,11 @@
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
-import pandas as pd
+import yfinance as yf
+import talib
+import warnings
+warnings.filterwarnings('ignore', category=DeprecationWarning)  # Ignore DeprecationWarning
+warnings.filterwarnings('ignore', category=FutureWarning) 
+
 
 def calculate_sharpe_ratio(returns, risk_free_rate=1):
     """
@@ -38,3 +43,27 @@ def normalize_alphas(column):
     normalized_column = scaler.fit_transform(column)
 
     return normalized_column
+
+# Function to fetch historical stock data using yfinance
+def fetch_stock_data(ticker, start_date, end_date):
+    try:
+        stock_data = yf.download(ticker, start=start_date, end=end_date)
+        return stock_data
+    except: 
+        print("error in fetching data")
+# Function to calculate MACD using TA-Lib
+def calculate_macd(data,fast_period,slow_period):
+    try:
+        if(fast_period > slow_period):
+            temp = fast_period
+            fast_period = slow_period
+            slow_period = temp
+        if(fast_period>1):
+            macd, signal, _ = talib.MACD(data['Close'], fastperiod=fast_period, slowperiod=slow_period, signalperiod=9)
+        else: 
+            fast_period = 2 
+            macd, signal, _ = talib.MACD(data['Close'], fastperiod=fast_period, slowperiod=slow_period, signalperiod=9)
+            
+        return macd, signal
+    except: 
+        print(f"error in calculatin macd signal {fast_period,slow_period}")

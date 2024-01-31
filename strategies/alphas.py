@@ -2,12 +2,12 @@ import numpy as np
 import pandas as pd
 
 
-def alpha1(data, returns_lookback=20, power=2, argmax_window=5):
+def alpha1(data, window_returns=20, power=2, argmax_window=5):
     """
     Alpha#1: (rank(Ts_ArgMax(SignedPower(((returns < 0) ? stddev(returns, 20) : Close), 2.), 5)) - 0.5)
 
     Parameters:
-    - returns_lookback: Lookback period for returns calculation
+    - window_returns: Lookback period for returns calculation
     - power: Power for SignedPower calculation
     - argmax_window: Window for Ts_ArgMax
 
@@ -15,7 +15,7 @@ def alpha1(data, returns_lookback=20, power=2, argmax_window=5):
     - A pandas Series representing the alpha signal
     """
     returns = data['Close'].pct_change()
-    signal = (returns < 0).rolling(window=returns_lookback).std().apply(
+    signal = (returns < 0).rolling(window=window_returns).std().apply(
         lambda x: np.argmax(np.power(np.abs(x), power), axis=0)
     ).rank().rolling(window=argmax_window).mean() - 0.5
     return signal
@@ -23,13 +23,13 @@ def alpha1(data, returns_lookback=20, power=2, argmax_window=5):
 # Sample code for generating signal condition
 # signal_condition_alpha1 = alpha1(data)
 
-def alpha2(data, delta_lookback=2, correlation_window=6,threshold = 0):
+def alpha2(data, delta_lookback=2, window_corr=6,threshold = 0):
     """
     Alpha#2: (-1 * correlation(rank(delta(log(Volume), 2)), rank(((Close - Open) / Open)), 6))
 
     Parameters:
     - delta_lookback: Lookback period for delta calculation
-    - correlation_window: Window for correlation calculation
+    - window_corr: Window for correlation calculation
 
     Returns:
     - A pandas Series representing the alpha signal
@@ -37,7 +37,7 @@ def alpha2(data, delta_lookback=2, correlation_window=6,threshold = 0):
     delta_Volume = np.log(data['Volume']).diff(delta_lookback)
     delta_price_ratio = (data['Close'] - data['Open']) / data['Open']
     signal = -1 * pd.Series(delta_Volume.rank(), name='delta_Volume_rank').rolling(
-        window=correlation_window
+        window=window_corr
     ).corr(pd.Series(delta_price_ratio.rank(), name='delta_price_ratio_rank'))
     signal = np.where(signal>threshold,1,0)
     return signal
@@ -45,18 +45,18 @@ def alpha2(data, delta_lookback=2, correlation_window=6,threshold = 0):
 # Sample code for generating signal condition
 # signal_condition_alpha2 = alpha2(data)
 
-def alpha3(data, correlation_lookback=10):
+def alpha3(data, window_corr=10):
     """
     Alpha#3: (-1 * correlation(rank(Open), rank(Volume), 10))
 
     Parameters:
-    - correlation_lookback: Lookback period for correlation calculation
+    - window_corr: Lookback period for correlation calculation
 
     Returns:
     - A pandas Series representing the alpha signal
     """
     signal = -1 * pd.Series(data['Open'].rank(), name='Open_rank').rolling(
-        window=correlation_lookback
+        window=window_corr
     ).corr(pd.Series(data['Volume'].rank(), name='Volume_rank'))
     return signal
 
@@ -102,17 +102,17 @@ def alpha5(data, vwap_lookback=10):
 # Sample code for generating signal condition
 # signal_condition_alpha5 = alpha5(data)
 
-def alpha6(data, correlation_window=10):
+def alpha6(data, window_corr=10):
     """
     Alpha#6: (-1 * correlation(Open, Volume, 10))
 
     Parameters:
-    - correlation_window: Window for correlation calculation
+    - window_corr: Window for correlation calculation
 
     Returns:
     - A pandas Series representing the alpha signal
     """
-    signal = -1 * pd.Series(data['Open'].rolling(window=correlation_window).corr(data['Volume']))
+    signal = -1 * pd.Series(data['Open'].rolling(window=window_corr).corr(data['Volume']))
     return signal
 
 # Sample code for generating signal condition
@@ -176,7 +176,7 @@ def alpha10(data, window_delta=4):
                                        np.where(condition2, -1 * delta_close, 0)))
     return alpha10_values
 
-def alpha11(data, window_vwap=3, window_volume=3):
+def alpha11(data, vwap_lookback=3, window_volume=3):
     """
     Alpha#11: ((rank(ts_max((vwap - close), window_vwap)) + rank(ts_min((vwap - close), window_vwap))) *
     rank(delta(volume, window_volume)))
@@ -185,8 +185,8 @@ def alpha11(data, window_vwap=3, window_volume=3):
     typical_price = (data['High'] + data['Low'] + data['Close']) / 3
     data['VWAP'] = (typical_price * data['Volume']).rolling(window=window_volume).sum() / data['Volume'].rolling(window=window_volume).sum()
     vwap_close_diff = data['VWAP'] - data['Close']
-    alpha11_values = ((vwap_close_diff.rolling(window=window_vwap).max().rank() +
-                       vwap_close_diff.rolling(window=window_vwap).min().rank()) *
+    alpha11_values = ((vwap_close_diff.rolling(window=vwap_lookback).max().rank() +
+                       vwap_close_diff.rolling(window=vwap_lookback).min().rank()) *
                       data['Volume'].diff(window_volume).rank())
     return alpha11_values
 
