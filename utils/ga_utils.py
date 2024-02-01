@@ -45,12 +45,12 @@ def generate_individual(alpha_function):
         'param2': (3, 20),
         'threshold': (0, 1),
         'fast_period': (2, 10),
-        'stop_loss_percentage': (-1, 2),
+        'stop_loss_percentage': (0, 1),
         'power': (1, 5),
         'argmax_window': (3, 10),
         'delta_lookback': (2, 10),
         'window_corr': (3, 15),
-        'ts_rank_lookback' : (3,15),
+        'ts_rank_lookback' : (3,60),
         'vwap_lookback': (3,20),
         'adv_window': (3,20),
         'window_sum': (3,10),
@@ -64,6 +64,7 @@ def generate_individual(alpha_function):
         'window_ts_rank':(5,15),
         'window_ts_rank_volume':(3,15),
         'window_std':(3,15),
+        'threshold_exit': (0,1)
 
         # Add more parameters as needed for other alpha functions
     }
@@ -71,6 +72,20 @@ def generate_individual(alpha_function):
     # Generate individual with random parameters within specified ranges
     individual = {param: random.randint(param_range[0], param_range[1]) for param, param_range in parameter_ranges.items() if param in alpha_params}
 
-    individual['threshold'] = random.randint(parameter_ranges['threshold'][0],parameter_ranges['threshold'][1])
+    individual['threshold'] = random.uniform(parameter_ranges['threshold'][0],parameter_ranges['threshold'][1])
+    # individual['threshold_exit'] = random.uniform(parameter_ranges['threshold_exit'][0],parameter_ranges['threshold_exit'][1])
     individual['stop_loss_percentage'] = random.uniform(parameter_ranges['stop_loss_percentage'][0],parameter_ranges['stop_loss_percentage'][1])
     return individual
+
+def generate_individual_naive():
+    
+    # Additional parameters for the trading strategy
+    param1 = random.randint(2, 20)
+    param2 = random.randint(3, 20)
+    threshold = random.uniform(0, 1)
+    fast_period = random.randint(2,10)
+    # slow_period = random.randint(fast_period)
+    # slow_p_exit = random.randint(fast_p_exit, 20)
+    stop_loss_percentage = random.uniform(-1, 2)
+    
+    return  [param1,param2,threshold,stop_loss_percentage]
