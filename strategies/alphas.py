@@ -294,19 +294,19 @@ import numpy as np
 def if_else(condition, true_value, false_value):
     return np.where(condition, true_value, false_value)
 
-def alpha_19(data, window_returns=250, window_sum=250):
+def alpha19(data, window_returns=250, window_sum=250):
     returns = data['Close'].pct_change()
     alpha = -1 * np.sign(((data['Close'] - data['Close'].shift(7)) + pd.Series.rolling(returns, window=window_sum).sum().rank(ascending=False)))
     return alpha
 
-def alpha_20(data, window=1):
+def alpha20(data, window=1):
     open_rank = pd.Series.rank(data['Open'] - data['High'].shift(window))
     close_rank = pd.Series.rank(data['Open'] - data['Close'].shift(window))
     low_rank = pd.Series.rank(data['Open'] - data['Low'].shift(window))
     alpha = -1 * open_rank * close_rank * low_rank
     return alpha
 
-def alpha_21(data, window1=8, window2=2, volume=None, adv20=None):
+def alpha21(data, window1=8, window2=2, volume=None, adv20=None):
     volume = data['Volume'] if volume is None else volume
     adv20 = data['Volume'].rolling(window=20).mean() if adv20 is None else adv20
     sum_close_8 = pd.Series.rolling(data['Close'], window=window1).sum() / window1
@@ -315,34 +315,34 @@ def alpha_21(data, window1=8, window2=2, volume=None, adv20=None):
     alpha = if_else(condition, -1, if_else((pd.Series.rolling(data['Close'], window=window2).sum() / window2) < ((sum_close_8 - std_close_8)), 1, if_else((1 < (volume / adv20)) | ((volume / adv20) == 1), 1, -1)))
     return alpha
 
-def alpha_22(data, window_corr=5, window_std=20):
+def alpha22(data, window_corr=5, window_std=20):
     alpha = -1 * (pd.Series.rolling(data['High'].corr(data['Volume'], window=window_corr), window=5).diff(5) * pd.Series.rank(pd.Series.rolling(data['Close'], window=window_std).std()))
     return alpha
 
-def alpha_23(data, window=20):
+def alpha23(data, window=20):
     condition = (pd.Series.rolling(data['High'], window=window).sum() / window) < data['High']
     alpha = if_else(condition, -1 * (data['High'] - pd.Series.shift(data['High'], 2)), 0)
     return alpha
 
-def alpha_24(data, window=100):
+def alpha24(data, window=100):
     delta_close_100 = (pd.Series.rolling(data['Close'], window=window).sum().diff(window) / pd.Series.shift(data['Close'], window=window))
     condition = (delta_close_100 < 0.05) | (delta_close_100 == 0.05)
     alpha = if_else(condition, -1 * (data['Close'] - data['Close'].expanding(window).min()), -1 * pd.Series.rolling(data['Close'], window=3).diff(3))
     return alpha
 
-def alpha_25(data, adv20=None, vwap=None):
+def alpha25(data, adv20=None, vwap=None):
     adv20 = data['Volume'].rolling(window=20).mean() if adv20 is None else adv20
     vwap = (data['High'] + data['Low'] + data['Close']) / 3 if vwap is None else vwap
     returns = -1 * data['Close'].pct_change()
     alpha = pd.Series.rank(((returns * adv20) * vwap * (data['High'] - data['Close'])))
     return alpha
 
-def alpha_26(data, window_corr=5):
+def alpha26(data, window_corr=5):
     volume_corr = data['Volume'].rolling(window=window_corr).corr(data['High'])
     alpha = -1 * pd.Series.expanding(volume_corr).rolling(3).max()
     return alpha
 
-def alpha_27(data, window_rank=6,window_volume=6):
+def alpha27(data, window_rank=6,window_volume=6):
     typical_price = (data['High'] + data['Low'] + data['Close']) / 3
     data['VWAP'] = (typical_price * data['Volume']).rolling(window=window_volume).sum() / data['Volume'].rolling(window=window_volume).sum()
 
@@ -350,92 +350,92 @@ def alpha_27(data, window_rank=6,window_volume=6):
     alpha = if_else(condition, -1, 1)
     return alpha
 
-def alpha_28(data, window_corr=5):
+def alpha28(data, window_corr=5):
     alpha = (pd.Series.rolling(data['Volume'].rank().rolling(window=window_corr).corr(data['Low'], window=window_corr), window=5) + ((data['High'] + data['Low']) / 2) - data['Close']).rank()
     return alpha
 
-def alpha_29(data, window1=2, window2=1, window_rank=5, window_delay=6):
+def alpha29(data, window1=2, window2=1, window_rank=5, window_delay=6):
     alpha = (pd.Series.rolling(pd.Series.rolling(pd.Series.rank(pd.Series.rank(pd.Series.expanding(np.log(pd.Series.rolling(pd.Series.rolling(pd.Series.rank(pd.Series.rank((-1 * pd.Series.rank(delta(data['Close'] - 1, 5))))), window=2).min(), 1).product())), window=5).rank())), window=1).min(), 5) + pd.Series.rank(pd.Series.shift(-1 * data['Close'].pct_change(), window=window_delay)).rank()
     return alpha
 
-def alpha_30(data, window1=1, window2=5, window_sum=5, window_sum_long=20):
+def alpha30(data, window1=1, window2=5, window_sum=5, window_sum_long=20):
     condition = (pd.Series.rank(pd.Series.rank(pd.Series.rank(((pd.Series.shift(data['Close'], window=window1) - data['Close']).sign() + pd.Series.shift((data['Close'] - pd.Series.shift(data['Close'], window=1)).sign(), window=1)) + (data['Close'] - pd.Series.shift(data['Close'], window=window2)).sign())).rolling(window=5).sum())) / pd.Series.rolling(data['Volume'], window=window_sum).sum() > pd.Series.rolling(data['Volume'], window=window_sum_long).sum()
     alpha = (1 - condition) * pd.Series.rolling(data['Volume'], window=window1).sum() / pd.Series.rolling(data['Volume'], window=window2).sum()
     return alpha
 
-def alpha_31(data, window1=10, window2=3, window_corr=12,window_volume=6):
+def alpha31(data, window1=10, window2=3, window_corr=12,window_volume=6):
     typical_price = (data['High'] + data['Low'] + data['Close']) / 3
     data['VWAP'] = (typical_price * data['Volume']).rolling(window=window_volume).sum() / data['Volume'].rolling(window=window_volume).sum()
 
     alpha = (pd.Series.rank(pd.Series.rank(pd.Series.rank(pd.Series.rolling((1 - pd.Series.rank(pd.Series.rank(delta(data['Close'], window=window1)))), window=10).sum(), window=10)))) + pd.Series.rank(-1 * delta(data['Close'], window=window2)) + np.sign(pd.Series.rolling(data['VWAP'].corr(data['Low'], window=window_corr), window=window_corr))
     return alpha
 
-def alpha_32(data, window1=7, window2=5, window_corr=230,window_volume=6):
+def alpha32(data, window1=7, window2=5, window_corr=230,window_volume=6):
     typical_price = (data['High'] + data['Low'] + data['Close']) / 3
     data['VWAP'] = (typical_price * data['Volume']).rolling(window=window_volume).sum() / data['Volume'].rolling(window=window_volume).sum()
 
     alpha = (pd.Series.rolling((pd.Series.rolling(data['Close'], window=window1).sum() / window1 - data['Close']) + 20 * pd.Series.rolling(data['VWAP'].corr(pd.Series.shift(data['Close'], window=5), window=window_corr), window=5)).rank() + pd.Series.rolling(data['VWAP'].rank(), window=5).rank())
     return alpha
 
-def alpha_33(data):
+def alpha33(data):
     alpha = pd.Series.rank((1 - (data['Open'] / data['Close'])) ** 1)
     return alpha
 
-def alpha_34(data, window_std_short=2, window_std_long=5, window_delta=1):
+def alpha34(data, window_std_short=2, window_std_long=5, window_delta=1):
     alpha = (1 - pd.Series.rank((pd.Series.rolling(data['Returns'].std(), window=window_std_short) / pd.Series.rolling(data['Returns'].std(), window=window_std_long)).rank() + (1 - pd.Series.rank(data['Close'].diff(window=window_delta)))))
     return alpha
 
-def alpha_35(data, window1=32, window2=16, window3=32):
+def alpha35(data, window1=32, window2=16, window3=32):
     alpha = (pd.Series.rolling(data['Volume'].rank(), window=window1) * (1 - pd.Series.rolling(((data['Close'] + data['High']) - data['Low']), window=window2).rank()) * (1 - pd.Series.rolling(data['Returns'], window=window3).rank()))
     return alpha
 
-def alpha_36(data, window_corr1=15, window_corr2=6, window_rank=5,window_volume=5):
+def alpha36(data, window_corr1=15, window_corr2=6, window_rank=5,window_volume=5):
     typical_price = (data['High'] + data['Low'] + data['Close']) / 3
     data['VWAP'] = (typical_price * data['Volume']).rolling(window=window_volume).sum() / data['Volume'].rolling(window=window_volume).sum()
 
     alpha = (2.21 * pd.Series.rank(data['Close'].corr(pd.Series.shift(data['Volume'], 1), window=window_corr1)) + 0.7 * pd.Series.rank(data['Open'] - data['Close']) + 0.73 * pd.Series.rank(pd.Series.rolling(delta(data['Returns'], 6), window=5).rank()) + pd.Series.rank(np.abs(data['Close'].corr(data['VWAP'], data['Adv20'], window=window_corr2))) + 0.6 * pd.Series.rank(((pd.Series.rolling(data['Close'], window=200).sum() / 200 - data['Open']) * (data['Close'] - data['Open']))))
     return alpha
 
-def alpha_37(data, window_corr=1, window_rank=200):
+def alpha37(data, window_corr=1, window_rank=200):
     alpha = (pd.Series.rank(pd.Series.rolling(pd.Series.shift(data['Open'] - data['Close'], 1), window=window_corr).corr(data['Close'], window=window_corr)) + pd.Series.rank(data['Open'] - data['Close']))
     return alpha
 
-def alpha_38(data, window_rank1=10, window_rank2=10):
+def alpha38(data, window_rank1=10, window_rank2=10):
     alpha = (-1 * pd.Series.rank(pd.Series.rolling(data['Close'].rank(), window=window_rank1))) * pd.Series.rank(data['Close'] / data['Open'])
     return alpha
 
-def alpha_39(data, window_delta=7, window_rank=250, window_exp=9):
+def alpha39(data, window_delta=7, window_rank=250, window_exp=9):
     alpha = (-1 * pd.Series.rank(delta(data['Close'], window=window_delta) * (1 - pd.Series.rank(pd.Series.expanding(data['Volume'] / data['Adv20'], window=window_exp).diff(window_exp))))) * (1 + pd.Series.rank(pd.Series.rolling(data['Returns'], window=window_rank).sum()))
     return alpha
 
-def alpha_40(data, window_std=10, window_corr=10):
+def alpha40(data, window_std=10, window_corr=10):
     alpha = (-1 * pd.Series.rank(pd.Series.rolling(data['High'].std(), window=window_std))) * data['High'].corr(data['Volume'], window=window_corr)
     return alpha
 
-def alpha_41(data,window_volume=6):
+def alpha41(data,window_volume=6):
     typical_price = (data['High'] + data['Low'] + data['Close']) / 3
     data['VWAP'] = (typical_price * data['Volume']).rolling(window=window_volume).sum() / data['Volume'].rolling(window=window_volume).sum()
 
     alpha = (np.sqrt(data['High'] * data['Low']) - data['VWAP'])
     return alpha
 
-def alpha_42(data,window_volume=6):
+def alpha42(data,window_volume=6):
     typical_price = (data['High'] + data['Low'] + data['Close']) / 3
     data['VWAP'] = (typical_price * data['Volume']).rolling(window=window_volume).sum() / data['Volume'].rolling(window=window_volume).sum()
 
     alpha = (pd.Series.rank(data['VWAP'] - data['Close']) / pd.Series.rank(data['VWAP'] + data['Close']))
     return alpha
 
-def alpha_43(data, window_rank1=20, window_rank2=8, window_delta=7):
+def alpha43(data, window_rank1=20, window_rank2=8, window_delta=7):
     alpha = pd.Series.rolling(data['Volume'] / data['Adv20'], window=window_rank1).rank() * pd.Series.rolling(-1 * delta(data['Close'], window=window_delta), window=window_rank2).rank()
     return alpha
 
 
-def alpha_44(data, window_corr=5):
+def alpha44(data, window_corr=5):
     alpha = -1 * data['High'].rolling(window=window_corr).corr(data['Volume'].rank())
     return alpha
 
-def alpha_45(data, window1=20, window2=2):
+def alpha45(data, window1=20, window2=2):
     sum_close_20 = pd.Series.rolling(data['Close'].shift(5), window=window1).sum() / window1
     corr_close_volume = pd.Series.rolling(data['Close'], window=window2).corr(data['Volume'])
     corr_sum_close_5_20 = pd.Series.rolling(data['Close'].rolling(window=5).sum(), window=window2).corr(pd.Series.rolling(data['Close'].rolling(window=20).sum(), window=window2))
@@ -443,15 +443,15 @@ def alpha_45(data, window1=20, window2=2):
     alpha = -1 * (sum_close_20.rank() * corr_close_volume.rank() * corr_sum_close_5_20.rank())
     return alpha
 
-def alpha_46(data, multiplier=0.1):
+def alpha46(data, multiplier=0.1):
     condition = ((data['Close'].shift(20) - data['Close'].shift(10)) / 10 - ((data['Close'].shift(10) - data['Close']) / 10)) < (-1 * multiplier)
     alpha = if_else(condition, -1, if_else(((data['Close'].shift(20) - data['Close'].shift(10)) / 10 - ((data['Close'].shift(10) - data['Close']) / 10)) < 0, 1, -1 * (data['Close'] - data['Close'].shift(1))))
     return alpha
 
 # Continue with the rest of the alpha functions using a similar structure
 
-# Example for alpha_47
-def alpha_47(data, multiplier=0.1,window_volume=6):
+# Example for alpha47
+def alpha47(data, multiplier=0.1,window_volume=6):
     typical_price = (data['High'] + data['Low'] + data['Close']) / 3
     data['VWAP'] = (typical_price * data['Volume']).rolling(window=window_volume).sum() / data['Volume'].rolling(window=window_volume).sum()
 
@@ -467,8 +467,8 @@ def alpha_47(data, multiplier=0.1,window_volume=6):
 
 # ... (Previous alpha functions)
 
-# Example for alpha_48
-def alpha_48(data, window_corr=250):
+# Example for alpha48
+def alpha48(data, window_corr=250):
     close_delta_1 = delta(data['Close'], period=1)
     close_indneutralize = close_delta_1 / data['Close']
     indneutralize_corr = pd.Series.rolling(close_indneutralize, window=window_corr).corr(data['Volume'])
@@ -479,8 +479,8 @@ def alpha_48(data, window_corr=250):
     alpha = -1 * indneutralize_corr / sum_delta_close_1_sq
     return alpha
 
-# Example for alpha_49
-def alpha_49(data, window_delta=7, window_corr=250, window_sum=250):
+# Example for alpha49
+def alpha49(data, window_delta=7, window_corr=250, window_sum=250):
     close_delta_7 = delta(data['Close'], period=window_delta)
     rank_close_delta_7 = pd.Series.rank(close_delta_7)
     
@@ -489,8 +489,8 @@ def alpha_49(data, window_delta=7, window_corr=250, window_sum=250):
     alpha = -1 * rank_close_delta_7 * pd.Series.rank(decay_linear_volume)
     return alpha
 
-# Example for alpha_50
-def alpha_50(data, window_corr=5,window_volume=5):
+# Example for alpha50
+def alpha50(data, window_corr=5,window_volume=5):
     typical_price = (data['High'] + data['Low'] + data['Close']) / 3
     data['VWAP'] = (typical_price * data['Volume']).rolling(window=window_volume).sum() / data['Volume'].rolling(window=window_volume).sum()
 
@@ -498,16 +498,16 @@ def alpha_50(data, window_corr=5,window_volume=5):
     alpha = -1 * pd.Series.rolling(rank_corr, window=5).max()
     return alpha
 
-# Example for alpha_51
-def alpha_51(data, multiplier=0.05):
+# Example for alpha51
+def alpha51(data, multiplier=0.05):
     condition = ((data['Close'].shift(20) - data['Close'].shift(10)) / 10 - ((data['Close'].shift(10) - data['Close']) / 10)) < (-1 * multiplier)
     alpha = if_else(condition, 1, -1 * (data['Close'] - data['Close'].shift(1)))
     return alpha
 
 # Continue with the rest of the alpha functions using a similar structure
 
-# Example for alpha_52
-def alpha_52(data, window1=5, window2=240):
+# Example for alpha52
+def alpha52(data, window1=5, window2=240):
     ts_min_low_5 = pd.Series.rolling(data['Low'], window=5).min()
     ts_min_low_5_delay_5 = ts_min_low_5.shift(5)
     returns_sum_240_20 = pd.Series.rolling(data['Close'].pct_change(), window=240).sum() - pd.Series.rolling(data['Close'].pct_change(), window=20).sum()
@@ -516,32 +516,32 @@ def alpha_52(data, window1=5, window2=240):
     alpha = ((ts_min_low_5 - ts_min_low_5_delay_5) * pd.Series.rank(returns_sum_240_20 / 220) * ts_rank_volume_5)
     return alpha
 
-# Example for alpha_53
-def alpha_53(data, window=9):
+# Example for alpha53
+def alpha53(data, window=9):
     close_minus_low = data['Close'] - data['Low']
     high_minus_close = data['High'] - data['Close']
     close_minus_low_ratio = close_minus_low / (data['Close'] - data['Low'])
     alpha = -1 * delta(close_minus_low_ratio, period=window)
     return alpha
 
-# Example for alpha_54
-def alpha_54(data):
+# Example for alpha54
+def alpha54(data):
     low_minus_close = data['Low'] - data['Close']
     open_pow_5 = data['Open']**5
     low_high_ratio = (data['Low'] - data['High']) * (data['Close']**5)
     alpha = -1 * (low_minus_close * open_pow_5) / low_high_ratio
     return alpha
 
-# Example for alpha_55
-def alpha_55(data, window_low=12, window_high=12, window_volume=6):
+# Example for alpha55
+def alpha55(data, window_low=12, window_high=12, window_volume=6):
     close_ts_min_low_ratio = (data['Close'] - pd.Series.rolling(data['Low'], window=window_low).min()) / (pd.Series.rolling(data['High'], window=window_high).max() - pd.Series.rolling(data['Low'], window=window_low).min())
     rank_close_ts_min_low = pd.Series.rank(close_ts_min_low_ratio)
     rank_volume = pd.Series.rank(data['Volume'])
     alpha = -1 * pd.Series.rolling(rank_close_ts_min_low, window=window_volume).corr(rank_volume)
     return alpha
 
-# Example for alpha_56
-def alpha_56(data, window_returns_10=10, window_returns_2=2, window_returns_3=3, cap=None):
+# Example for alpha56
+def alpha56(data, window_returns_10=10, window_returns_2=2, window_returns_3=3, cap=None):
     sum_returns_10 = pd.Series.rolling(data['Close'].pct_change(), window=window_returns_10).sum()
     sum_returns_2_3 = pd.Series.rolling(data['Close'].pct_change(), window=window_returns_3).sum() / pd.Series.rolling(pd.Series.rolling(data['Close'].pct_change(), window=window_returns_2).sum(), window=window_returns_3).sum()
     
@@ -549,8 +549,8 @@ def alpha_56(data, window_returns_10=10, window_returns_2=2, window_returns_3=3,
     alpha = -1 * (pd.Series.rank(sum_returns_10) * pd.Series.rank(sum_returns_2_3) * cap_multiplier)
     return alpha
 
-# Example for alpha_57
-def alpha_57(data, window=30,window_volume=6):
+# Example for alpha57
+def alpha57(data, window=30,window_volume=6):
     
     typical_price = (data['High'] + data['Low'] + data['Close']) / 3
     data['VWAP'] = (typical_price * data['Volume']).rolling(window=window_volume).sum() / data['Volume'].rolling(window=window_volume).sum()
@@ -561,9 +561,9 @@ def alpha_57(data, window=30,window_volume=6):
     alpha = -1 * decay_linear_max_close
     return alpha
 
-# Example for alpha_58
+# Example for alpha58
 ##problem
-def alpha_58(data, window_corr=7.89291, window_rank=5.50322,window_volume=6):
+def alpha58(data, window_corr=7.89291, window_rank=5.50322,window_volume=6):
     typical_price = (data['High'] + data['Low'] + data['Close']) / 3
     data['VWAP'] = (typical_price * data['Volume']).rolling(window=window_volume).sum() / data['Volume'].rolling(window=window_volume).sum()
 
@@ -573,9 +573,9 @@ def alpha_58(data, window_corr=7.89291, window_rank=5.50322,window_volume=6):
     alpha = -1 * pd.Series.rank(corr_indneutralize_volume)
     return alpha
 
-# Example for alpha_59
+# Example for alpha59
 ##problem
-def alpha_59(data, window_corr=16.2289, window_rank=8.19648, weight_vwap=0.728317,window_volume=5):
+def alpha59(data, window_corr=16.2289, window_rank=8.19648, weight_vwap=0.728317,window_volume=5):
     typical_price = (data['High'] + data['Low'] + data['Close']) / 3
     data['VWAP'] = (typical_price * data['Volume']).rolling(window=window_volume).sum() / data['Volume'].rolling(window=window_volume).sum()
 
@@ -585,8 +585,8 @@ def alpha_59(data, window_corr=16.2289, window_rank=8.19648, weight_vwap=0.72831
     alpha = -1 * pd.Series.rank(corr_indneutralize_volume)
     return alpha
 
-# Example for alpha_60
-def alpha_60(data, scale_multiplier=2, window_rank=10):
+# Example for alpha60
+def alpha60(data, scale_multiplier=2, window_rank=10):
     low_high_ratio = (data['Low'] - data['High']) / (data['High'] - data['Low'])
     volume_rank = pd.Series.rank(data['Volume'])
     
@@ -595,8 +595,8 @@ def alpha_60(data, scale_multiplier=2, window_rank=10):
 
 # Continue with the rest of the alpha functions using a similar structure
 
-# Example for alpha_61
-def alpha_61(data, window_ts_min=16.1219,window_volume=5):
+# Example for alpha61
+def alpha61(data, window_ts_min=16.1219,window_volume=5):
     typical_price = (data['High'] + data['Low'] + data['Close']) / 3
     data['VWAP'] = (typical_price * data['Volume']).rolling(window=window_volume).sum() / data['Volume'].rolling(window=window_volume).sum()
 
@@ -610,6 +610,37 @@ def alpha_61(data, window_ts_min=16.1219,window_volume=5):
 
 
 
+import pandas as pd
+
+def alpha102(data, fast_period=12, slow_period=26):
+    """
+    Calculate MACD (Moving Average Convergence Divergence).
+
+    Parameters:
+    - data: Pandas DataFrame with 'Close' prices.
+    - fast_period: Fast period for MACD calculation (default: 12).
+    - slow_period: Slow period for MACD calculation (default: 26).
+
+    Returns:
+    - Pandas Series containing the MACD values.
+    """
+    if(fast_period>slow_period):
+        slow_period,fast_period = fast_period,slow_period
+    # Calculate the short-term (fast) EMA
+    fast_ema = data['Close'].ewm(span=fast_period, min_periods=1, adjust=False).mean()
+
+    # Calculate the long-term (slow) EMA
+    slow_ema = data['Close'].ewm(span=slow_period, min_periods=1, adjust=False).mean()
+
+    # Calculate the MACD line
+    macd_line = fast_ema - slow_ema
+
+    return macd_line
+
+# Example usage:
+# Assuming you have a DataFrame named 'stock_data' with a 'Close' column
+# You can call the function like this:
+# macd_values = calculate_macd(stock_data)
 
 
 

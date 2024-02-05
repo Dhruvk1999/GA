@@ -64,14 +64,18 @@ def generate_individual(alpha_function):
         'window_ts_rank':(5,15),
         'window_ts_rank_volume':(3,15),
         'window_std':(3,15),
-        'threshold_exit': (0,1)
+        'threshold_exit': (0,1),
+        'fast_period':(2,15),
 
         # Add more parameters as needed for other alpha functions
     }
 
+
+
     # Generate individual with random parameters within specified ranges
     individual = {param: random.randint(param_range[0], param_range[1]) for param, param_range in parameter_ranges.items() if param in alpha_params}
-
+    if('fast_period' in individual.keys()):
+        individual['slow_period'] = random.randint(individual['fast_period'],26) 
     individual['threshold'] = random.uniform(parameter_ranges['threshold'][0],parameter_ranges['threshold'][1])
     # individual['threshold_exit'] = random.uniform(parameter_ranges['threshold_exit'][0],parameter_ranges['threshold_exit'][1])
     individual['stop_loss_percentage'] = random.uniform(parameter_ranges['stop_loss_percentage'][0],parameter_ranges['stop_loss_percentage'][1])
